@@ -1,0 +1,155 @@
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="stylesheet" href="markdown.css" />
+		<title>Markdown to PDF</title>
+		<style>
+			.cm-editor {
+				height: 100%;
+			}
+			.container {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				grid-gap: 0;
+				height: calc(100vh - 4rem);
+				& > * {
+					box-sizing: border-box;
+					border-width: 1px;
+					border-style: solid;
+					border-color: #e5e7eb;
+				}
+			}
+			@media (max-width: 824px) {
+				.container {
+					grid-template-columns: 1fr;
+					grid-template-rows: 1fr 1fr;
+				}
+			}
+
+			#pdfize {
+				position: absolute;
+				top: 1rem;
+				right: 1rem;
+				padding: 0.4rem 0.8rem;
+				background-color: #007bff;
+				color: #fff;
+				border: none;
+				border-radius: 0.4rem;
+				cursor: pointer;
+			}
+
+			footer {
+				font-family:
+					-apple-system,
+					BlinkMacSystemFont,
+					Segoe UI,
+					Helvetica,
+					Arial,
+					sans-serif,
+					'Apple Color Emoji',
+					'Segoe UI Emoji';
+				font-size: 16px;
+				text-align: center;
+			}
+
+			@media print {
+				#pdfize {
+					display: none;
+				}
+				#editor {
+					display: none;
+				}
+				footer {
+					display: none;
+				}
+				.container {
+					height: auto;
+					grid-template-columns: 1fr;
+					& > * {
+						border: none;
+					}
+				}
+				@page {
+					margin-top: 0;
+					margin-bottom: 0;
+				}
+				body {
+					padding-top: 1.6cm;
+					padding-bottom: 1.6cm;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div id="editor"></div>
+			<div id="generated" class="markdown-body"></div>
+		</div>
+		<button id="pdfize" onclick="print()">Generate PDF</button>
+		<footer>
+			<p>
+				Made with ❤️ by Ulysse, available on
+				<a href="https://github.com/BuonOmo/markdown2pdf">GitHub</a>
+			</p>
+		</footer>
+		<script type="importmap">
+			{
+				"imports": {
+					"codemirror": "https://esm.sh/codemirror@6.0",
+					"@codemirror/lang-markdown": "https://esm.sh/@codemirror/lang-markdown@6",
+					"marked": "https://esm.sh/marked@15"
+				}
+			}
+		</script>
+		<script type="module">
+			import { EditorView, basicSetup } from 'codemirror'
+			import { markdown } from '@codemirror/lang-markdown'
+
+			import { marked } from 'marked'
+
+			const defaultDoc = `
+			*Write* your Markdown \`here\`.
+			And then click the <kbd>Generate PDF</kbd> button.
+
+			Tables will look like this:
+
+			| Name | Age |
+			|:-----|----:|
+			| John | 25  |
+			| Jane | 30  |
+			| Alice| 28  |
+
+			And code snippets will look like this:
+
+			\`\`\`
+			let x = 'y'
+			\`\`\`
+			`
+				.split('\n')
+				.map((line) => line.trim())
+				.join('\n')
+
+			const updateGeneratedHtml = (content) => {
+				const html = marked.parse(content)
+				document.getElementById('generated').innerHTML = html
+			}
+
+			const view = new EditorView({
+				doc: defaultDoc,
+				parent: document.getElementById('editor'),
+				extensions: [
+					basicSetup,
+					markdown(),
+					EditorView.updateListener.of((update) => {
+						if (update.docChanged) {
+							console.debug('Document changed')
+							updateGeneratedHtml(update.state.doc.toString())
+						}
+					}),
+				],
+			})
+
+			updateGeneratedHtml(view.state.doc.toString())
+		</script>
+	</body>
+</html>
