@@ -85,7 +85,7 @@
 			<div id="editor"></div>
 			<div id="generated" class="markdown-body"></div>
 		</div>
-		<button id="pdfize" onclick="print()">Generate PDF</button>
+		<button id="pdfize">Generate PDF</button>
 		<footer>
 			<p>
 				Made with ❤️ by Ulysse, available on
@@ -107,7 +107,8 @@
 
 			import { marked } from 'marked'
 
-			const defaultDoc = `
+			const defaultDoc = `# Markdown2PDF
+
 			*Write* your Markdown \`here\`.
 			And then click the <kbd>Generate PDF</kbd> button.
 
@@ -133,6 +134,26 @@
 				const html = marked.parse(content)
 				document.getElementById('generated').innerHTML = html
 			}
+
+			document.getElementById('pdfize').addEventListener('click', () => {
+				const pageTitle = document.title
+				const docTitle = (
+					document.querySelector('#generated h1')?.textContent ||
+					'markdown2'
+				)
+					.trim()
+					.normalize('NFD')
+					.replace(/[\u0300-\u036f]/g, '')
+					.replace(/\s+/g, '-')
+					.toLowerCase()
+
+				try {
+					document.title = docTitle
+					window.print()
+				} finally {
+					document.title = pageTitle
+				}
+			})
 
 			const view = new EditorView({
 				doc: defaultDoc,
