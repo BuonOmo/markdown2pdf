@@ -100,6 +100,8 @@
 				"imports": {
 					"codemirror": "https://esm.sh/codemirror@6.0",
 					"@codemirror/lang-markdown": "https://esm.sh/@codemirror/lang-markdown@6",
+					"@catppuccin/codemirror": "https://esm.sh/@catppuccin/codemirror@1.0.1",
+					"@codemirror/language-data": "https://esm.sh/@codemirror/language-data@6.5.1",
 					"marked": "https://esm.sh/marked@15"
 				}
 			}
@@ -107,9 +109,17 @@
 		<script type="module">
 			import { EditorView, basicSetup } from 'codemirror'
 			import { markdown } from '@codemirror/lang-markdown'
+			import {
+				catppuccinLatte,
+				catppuccinMocha,
+			} from '@catppuccin/codemirror'
 
 			import { marked } from 'marked'
+			import { languages } from '@codemirror/language-data'
 
+			const isDarkMode =
+				window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ??
+				false
 			const defaultDoc = `# Markdown2PDF
 
 			*Write* your Markdown \`here\`.
@@ -125,8 +135,10 @@
 
 			And code snippets will look like this:
 
-			\`\`\`
-			let x = 'y'
+			\`\`\`ruby
+			tree = Hash.new { |h, k| h[k] = Hash.new(&h.default_proc) }
+			tree["foo"]["bar"]["baz"] = 42
+			pp tree
 			\`\`\`
 			`
 				.split('\n')
@@ -158,19 +170,24 @@
 				}
 			})
 
+			let extensions = [
+				basicSetup,
+				markdown({
+					codeLanguages: languages,
+				}),
+				EditorView.updateListener.of((update) => {
+					if (update.docChanged) {
+						console.debug('Document changed')
+						updateGeneratedHtml(update.state.doc.toString())
+					}
+				}),
+				isDarkMode ? catppuccinMocha : catppuccinLatte,
+			]
+
 			const view = new EditorView({
 				doc: defaultDoc,
 				parent: document.getElementById('editor'),
-				extensions: [
-					basicSetup,
-					markdown(),
-					EditorView.updateListener.of((update) => {
-						if (update.docChanged) {
-							console.debug('Document changed')
-							updateGeneratedHtml(update.state.doc.toString())
-						}
-					}),
-				],
+				extensions,
 			})
 
 			updateGeneratedHtml(view.state.doc.toString())
