@@ -4,6 +4,13 @@
 		<link rel="stylesheet" href="markdown.css" />
 		<title>Markdown to PDF</title>
 		<style>
+			@import
+				url("https://esm.sh/@catppuccin/highlightjs@1.0/css/catppuccin-mocha.css")
+				screen and (prefers-color-scheme: dark);
+			@import
+				url("https://esm.sh/@catppuccin/highlightjs@1.0/css/catppuccin-latte.css")
+				print, screen and not (prefers-color-scheme: dark);
+
 			body {
 				margin: 0;
 			}
@@ -99,10 +106,12 @@
 			{
 				"imports": {
 					"codemirror": "https://esm.sh/codemirror@6.0",
-					"@codemirror/lang-markdown": "https://esm.sh/@codemirror/lang-markdown@6",
-					"@catppuccin/codemirror": "https://esm.sh/@catppuccin/codemirror@1.0.1",
-					"@codemirror/language-data": "https://esm.sh/@codemirror/language-data@6.5.1",
-					"marked": "https://esm.sh/marked@15"
+					"@codemirror/lang-markdown": "https://esm.sh/@codemirror/lang-markdown@6.3",
+					"@catppuccin/codemirror": "https://esm.sh/@catppuccin/codemirror@1.0",
+					"@codemirror/language-data": "https://esm.sh/@codemirror/language-data@6.5",
+					"marked": "https://esm.sh/marked@15.0",
+					"marked-highlight": "https://esm.sh/marked-highlight@2.2",
+					"highlight.js": "https://esm.sh/highlight.js@11.11"
 				}
 			}
 		</script>
@@ -114,12 +123,26 @@
 				catppuccinMocha,
 			} from '@catppuccin/codemirror'
 
-			import { marked } from 'marked'
+			import { Marked } from 'marked'
+			import { markedHighlight } from 'marked-highlight'
 			import { languages } from '@codemirror/language-data'
+			import hljs from 'highlight.js'
+
+			const marked = new Marked(
+				markedHighlight({
+					emptyLangClass: 'hljs',
+					langPrefix: 'hljs language-',
+					highlight(code, lang, info) {
+						const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+						return hljs.highlight(code, { language }).value
+					}
+				})
+			)
 
 			const isDarkMode =
 				window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ??
 				false
+
 			const defaultDoc = `# Markdown2PDF
 
 			*Write* your Markdown \`here\`.
@@ -154,7 +177,7 @@
 				const pageTitle = document.title
 				const docTitle = (
 					document.querySelector('#generated h1')?.textContent ||
-					'markdown2'
+					'markdown2' /* .pdf */
 				)
 					.trim()
 					.normalize('NFD')
