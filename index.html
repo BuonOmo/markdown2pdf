@@ -62,6 +62,8 @@
 				text-align: center;
 			}
 
+			// NOTE: On this media, the (max-width: 824px) will also apply
+			// due to page sizes.
 			@media print {
 				#pdfize {
 					display: none;
@@ -75,6 +77,7 @@
 				.container {
 					height: auto;
 					grid-template-columns: 1fr;
+					grid-template-rows: 1fr;
 					& > * {
 						border: none;
 					}
